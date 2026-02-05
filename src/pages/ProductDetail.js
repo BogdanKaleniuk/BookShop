@@ -1,11 +1,13 @@
 import React from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { products } from "../data/products";
+import { useToast } from "../components/ToastContainer";
 import "./ProductDetail.css";
 
 function ProductDetail({ addToCart }) {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const product = products.find((p) => p.id === parseInt(id));
 
   if (!product) {
@@ -23,7 +25,7 @@ function ProductDetail({ addToCart }) {
 
   const handleAddToCart = () => {
     addToCart(product);
-    alert(`${product.name} додано до кошика!`);
+    addToast(`${product.name} додано до кошика!`, "success");
   };
 
   const relatedProducts = products

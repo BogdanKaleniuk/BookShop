@@ -1,12 +1,24 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useToast } from "../components/ToastContainer";
 import "./Cart.css";
 
 function Cart({ cart, updateQuantity, removeFromCart, clearCart }) {
+  const { addToast } = useToast();
   const totalPrice = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
+
+  const handleRemove = (item) => {
+    removeFromCart(item.id);
+    addToast(`${item.name} видалено з кошика`, "error");
+  };
+
+  const handleClearCart = () => {
+    clearCart();
+    addToast("Кошик очищено", "info");
+  };
 
   if (cart.length === 0) {
     return (
@@ -62,7 +74,7 @@ function Cart({ cart, updateQuantity, removeFromCart, clearCart }) {
                 <p className="item-total">{item.price * item.quantity} ₴</p>
 
                 <button
-                  onClick={() => removeFromCart(item.id)}
+                  onClick={() => handleRemove(item)}
                   className="remove-btn"
                 >
                   🗑️ Видалити
@@ -91,7 +103,8 @@ function Cart({ cart, updateQuantity, removeFromCart, clearCart }) {
           </div>
 
           <button className="checkout-btn">Оформити замовлення</button>
-          <button className="clear-cart-btn" onClick={clearCart}>
+
+          <button className="clear-cart-btn" onClick={handleClearCart}>
             Очистити кошик
           </button>
 

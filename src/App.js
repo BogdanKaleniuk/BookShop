@@ -6,6 +6,8 @@ import Home from "./pages/Home";
 import ProductList from "./pages/ProductList";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
+import SearchResults from "./pages/SearchResults";
+import { ToastProvider } from "./components/ToastContainer";
 
 function App() {
   // Завантажуємо кошик з localStorage при старті
@@ -65,37 +67,43 @@ function App() {
 
   return (
     <Router>
-      <div className="App">
-        <Header
-          cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
-        />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route
-            path="/books"
-            element={<ProductList category="books" addToCart={addToCart} />}
+      <ToastProvider>
+        <div className="App">
+          <Header
+            cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
           />
-          <Route
-            path="/games"
-            element={<ProductList category="games" addToCart={addToCart} />}
-          />
-          <Route
-            path="/product/:id"
-            element={<ProductDetail addToCart={addToCart} />}
-          />
-          <Route
-            path="/cart"
-            element={
-              <Cart
-                cart={cart}
-                updateQuantity={updateQuantity}
-                removeFromCart={removeFromCart}
-                clearCart={clearCart}
-              />
-            }
-          />
-        </Routes>
-      </div>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route
+              path="/books"
+              element={<ProductList category="books" addToCart={addToCart} />}
+            />
+            <Route
+              path="/games"
+              element={<ProductList category="games" addToCart={addToCart} />}
+            />
+            <Route
+              path="/product/:id"
+              element={<ProductDetail addToCart={addToCart} />}
+            />
+            <Route
+              path="/search"
+              element={<SearchResults addToCart={addToCart} />}
+            />
+            <Route
+              path="/cart"
+              element={
+                <Cart
+                  cart={cart}
+                  updateQuantity={updateQuantity}
+                  removeFromCart={removeFromCart}
+                  clearCart={clearCart}
+                />
+              }
+            />
+          </Routes>
+        </div>
+      </ToastProvider>
     </Router>
   );
 }

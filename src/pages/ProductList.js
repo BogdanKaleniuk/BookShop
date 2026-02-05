@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { products } from "../data/products";
+import { useToast } from "../components/ToastContainer";
 import "./ProductList.css";
 
 function ProductList({ category, addToCart }) {
   const [filter, setFilter] = useState("all");
   const [sortBy, setSortBy] = useState("name");
+  const { addToast } = useToast();
 
   const filteredProducts = products
-    .filter((product) => product.category === category) // Тільки книги або ігри
+    .filter((product) => product.category === category)
     .filter((product) => {
       if (filter === "inStock") return product.inStock;
       if (filter === "outOfStock") return !product.inStock;
@@ -22,6 +24,11 @@ function ProductList({ category, addToCart }) {
     });
 
   const categoryTitle = category === "books" ? "Книги" : "Настільні ігри";
+
+  const handleAddToCart = (product) => {
+    addToCart(product);
+    addToast(`${product.name} додано до кошика!`, "success");
+  };
 
   return (
     <div className="product-list">
@@ -65,7 +72,7 @@ function ProductList({ category, addToCart }) {
                 {product.inStock ? (
                   <button
                     className="add-to-cart-btn"
-                    onClick={() => addToCart(product)}
+                    onClick={() => handleAddToCart(product)}
                   >
                     До кошика
                   </button>
