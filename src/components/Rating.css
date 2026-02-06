@@ -1,0 +1,71 @@
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stars {
+  display: flex;
+  gap: 0.1rem;
+}
+
+.star {
+  display: inline-block;
+  line-height: 1;
+}
+
+.star-full {
+  color: #f39c12;
+}
+
+.star-half {
+  background: linear-gradient(90deg, #f39c12 50%, #ddd 50%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.star-empty {
+  color: #ddd;
+}
+
+.rating-info {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.rating-value {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.review-count {
+  color: #7f8c8d;
+}
+
+/* Розміри */
+.rating-small .stars {
+  font-size: 0.9rem;
+}
+
+.rating-small .rating-info {
+  font-size: 0.8rem;
+}
+
+.rating-medium .stars {
+  font-size: 1.1rem;
+}
+
+.rating-medium .rating-info {
+  font-size: 0.9rem;
+}
+
+.rating-large .stars {
+  font-size: 1.5rem;
+}
+
+.rating-large .rating-info {
+  font-size: 1.1rem;
+}

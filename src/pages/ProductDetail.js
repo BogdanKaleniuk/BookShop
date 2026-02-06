@@ -1,14 +1,62 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { products } from "../data/products";
+import { products, getAllProducts } from "../data/products";
 import { useToast } from "../components/ToastContainer";
+import Rating from "../components/Rating";
 import "./ProductDetail.css";
 
 function ProductDetail({ addToCart }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const product = products.find((p) => p.id === parseInt(id));
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+
+  useEffect(() => {
+    loadProduct();
+  }, [id]);
+
+  const loadProduct = async () => {
+    setLoading(true);
+    try {
+      const allProducts = await getAllProducts();
+      const foundProduct = allProducts.find((p) => p.id.toString() === id);
+
+      if (foundProduct) {
+        setProduct(foundProduct);
+
+        // Знаходимо схожі товари
+        const related = allProducts
+          .filter(
+            (p) =>
+              p.category === foundProduct.category && p.id !== foundProduct.id,
+          )
+          .slice(0, 3);
+        setRelatedProducts(related);
+      } else {
+        setProduct(null);
+      }
+    } catch (error) {
+      console.error("Error loading product:", error);
+      // Fallback до локальних даних
+      const foundProduct = products.find((p) => p.id.toString() === id);
+      setProduct(foundProduct || null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="product-detail">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Завантаження...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -27,10 +75,6 @@ function ProductDetail({ addToCart }) {
     addToCart(product);
     addToast(`${product.name} додано до кошика!`, "success");
   };
-
-  const relatedProducts = products
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 3);
 
   return (
     <div className="product-detail">
@@ -52,7 +96,23 @@ function ProductDetail({ addToCart }) {
             <p className="detail-meta">Кількість гравців: {product.players}</p>
           )}
 
+          <Rating
+            rating={product.rating}
+            reviewCount={product.reviewCount}
+            size="large"
+          />
+
           <p className="detail-description">{product.description}</p>
+
+          {product.publishedDate && (
+            <p className="detail-extra">
+              Дата публікації: {product.publishedDate}
+            </p>
+          )}
+
+          {product.pageCount && product.pageCount > 0 && (
+            <p className="detail-extra">Сторінок: {product.pageCount}</p>
+          )}
 
           <div className="detail-price">
             <span className="price-label">Ціна:</span>
@@ -87,6 +147,11 @@ function ProductDetail({ addToCart }) {
               >
                 <img src={relatedProduct.image} alt={relatedProduct.name} />
                 <h3>{relatedProduct.name}</h3>
+                <Rating
+                  rating={relatedProduct.rating}
+                  reviewCount={relatedProduct.reviewCount}
+                  size="small"
+                />
                 <p className="related-price">{relatedProduct.price} ₴</p>
               </Link>
             ))}

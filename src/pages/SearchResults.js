@@ -1,15 +1,36 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { products } from "../data/products";
+import { products, getAllProducts } from "../data/products";
 import { useToast } from "../components/ToastContainer";
+import Rating from "../components/Rating";
+import ProductSkeleton from "../components/ProductSkeleton";
 import "./SearchResults.css";
 
 function SearchResults({ addToCart }) {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const { addToast } = useToast();
+  const [allProducts, setAllProducts] = useState(products);
+  const [loading, setLoading] = useState(true);
 
-  const searchResults = products.filter((product) => {
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    setLoading(true);
+    try {
+      const productsData = await getAllProducts();
+      setAllProducts(productsData);
+    } catch (error) {
+      console.error("Error loading products:", error);
+      setAllProducts(products);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const searchResults = allProducts.filter((product) => {
     const searchLower = query.toLowerCase();
     const nameMatch = product.name.toLowerCase().includes(searchLower);
     const authorMatch = product.author?.toLowerCase().includes(searchLower);
@@ -29,12 +50,17 @@ function SearchResults({ addToCart }) {
       <div className="search-header">
         <h1>Результати пошуку: "{query}"</h1>
         <p className="results-count">
-          Знайдено {searchResults.length}{" "}
-          {searchResults.length === 1 ? "товар" : "товарів"}
+          {loading
+            ? "Завантаження..."
+            : `Знайдено ${searchResults.length} ${searchResults.length === 1 ? "товар" : "товарів"}`}
         </p>
       </div>
 
-      {searchResults.length === 0 ? (
+      {loading ? (
+        <div className="products-grid">
+          <ProductSkeleton count={6} />
+        </div>
+      ) : searchResults.length === 0 ? (
         <div className="no-results">
           <h2>😔 Нічого не знайдено</h2>
           <p>Спробуйте змінити пошуковий запит</p>
@@ -64,6 +90,12 @@ function SearchResults({ addToCart }) {
                     ? product.author
                     : product.players}
                 </p>
+
+                <Rating
+                  rating={product.rating}
+                  reviewCount={product.reviewCount}
+                  size="small"
+                />
 
                 <p className="product-category">
                   {product.category === "books"
