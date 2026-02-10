@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { products, getAllProducts } from "../data/products";
+import { products } from "../data/products";
+import { useBooks } from "../context/BooksContext";
 import { useToast } from "../components/ToastContainer";
 import Rating from "../components/Rating";
 import ProductSkeleton from "../components/ProductSkeleton";
@@ -9,31 +10,30 @@ import "./ProductList.css";
 function ProductList({ category, addToCart }) {
   const [filter, setFilter] = useState("all");
   const [sortBy, setSortBy] = useState("name");
-  const [allProducts, setAllProducts] = useState(products);
-  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const { addToast } = useToast();
 
-  // Завантажуємо товари при першому рендері
-  useEffect(() => {
-    loadProducts();
-  }, []);
+  // Отримуємо книги з Context (тільки для категорії books)
+  const { apiBooks, loading, hasMore, loadMoreBooks } = useBooks();
 
-  const loadProducts = async () => {
-    setLoading(true);
-    try {
-      const productsData = await getAllProducts();
-      setAllProducts(productsData);
-    } catch (error) {
-      console.error("Error loading products:", error);
-      addToast("Помилка завантаження товарів", "error");
-      setAllProducts(products); // Fallback до локальних
-    } finally {
-      setLoading(false);
-    }
-  };
+  // DEBUG: Логуємо стан
+  console.log("📊 ProductList DEBUG:", {
+    category,
+    loading,
+    hasMore,
+    apiBooksLength: apiBooks.length,
+    productsLength: products.length,
+  });
+
+  // Визначаємо які товари показувати
+  const allProducts =
+    category === "books"
+      ? apiBooks // Для книг - тільки з API
+      : products.filter((p) => p.category === category); // Для ігор - локальні
+
+  console.log("📚 allProducts length:", allProducts.length);
 
   const filteredProducts = allProducts
-    .filter((product) => product.category === category)
     .filter((product) => {
       if (filter === "inStock") return product.inStock;
       if (filter === "outOfStock") return !product.inStock;
@@ -54,9 +54,17 @@ function ProductList({ category, addToCart }) {
     addToast(`${product.name} додано до кошика!`, "success");
   };
 
-  const handleRefresh = () => {
-    loadProducts();
-    addToast("Оновлення товарів...", "info");
+  const handleLoadMore = async () => {
+    console.log("🔄 handleLoadMore викликано");
+    setLoadingMore(true);
+    const count = await loadMoreBooks();
+    console.log("✅ Завантажено книг:", count);
+    if (count > 0) {
+      addToast(`Завантажено ще ${count} книг`, "success");
+    } else {
+      addToast("Більше книг немає", "info");
+    }
+    setLoadingMore(false);
   };
 
   return (
@@ -82,19 +90,11 @@ function ProductList({ category, addToCart }) {
             <option value="priceHigh">Спочатку дорожчі</option>
             <option value="rating">За рейтингом</option>
           </select>
-
-          <button
-            className="refresh-btn"
-            onClick={handleRefresh}
-            disabled={loading}
-          >
-            {loading ? "⏳" : "🔄"} Оновити
-          </button>
         </div>
       </div>
 
       <div className="products-grid">
-        {loading ? (
+        {loading && category === "books" ? (
           <ProductSkeleton count={8} />
         ) : filteredProducts.length === 0 ? (
           <div className="no-products">
@@ -142,6 +142,40 @@ function ProductList({ category, addToCart }) {
           ))
         )}
       </div>
+
+      {/* DEBUG БЛОК */}
+
+      {/* Кнопка "Завантажити ще" - тільки для книг */}
+      {!loading && hasMore && category === "books" && (
+        <div className="load-more-container">
+          <button
+            className="load-more-btn"
+            onClick={handleLoadMore}
+            disabled={loadingMore}
+          >
+            {loadingMore ? (
+              <>
+                <span className="spinner"></span>
+                Завантаження...
+              </>
+            ) : (
+              <>📚 Завантажити ще книги</>
+            )}
+          </button>
+          <p className="load-more-hint">
+            Завантажено: {allProducts.length} книг
+          </p>
+        </div>
+      )}
+
+      {!loading &&
+        !hasMore &&
+        category === "books" &&
+        allProducts.length > 0 && (
+          <div className="no-more-items">
+            <p>🎉 Ви переглянули всі доступні книги!</p>
+          </div>
+        )}
     </div>
   );
 }

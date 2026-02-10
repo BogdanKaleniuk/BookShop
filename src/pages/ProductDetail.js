@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { products, getAllProducts } from "../data/products";
+import { products } from "../data/products";
+import { useBooks } from "../context/BooksContext";
 import { useToast } from "../components/ToastContainer";
 import Rating from "../components/Rating";
 import "./ProductDetail.css";
@@ -9,25 +10,33 @@ function ProductDetail({ addToCart }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { getBookById, apiBooks } = useBooks();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState([]);
 
   useEffect(() => {
     loadProduct();
-  }, [id]);
+  }, [id, apiBooks]);
 
-  const loadProduct = async () => {
+  const loadProduct = () => {
     setLoading(true);
     try {
-      const allProducts = await getAllProducts();
-      const foundProduct = allProducts.find((p) => p.id.toString() === id);
+      // Шукаємо спочатку серед книг з API
+      let foundProduct = getBookById(id);
+
+      // Якщо не знайдено - шукаємо в іграх (локальні)
+      if (!foundProduct) {
+        foundProduct = products.find((p) => p.id.toString() === id);
+      }
 
       if (foundProduct) {
         setProduct(foundProduct);
 
         // Знаходимо схожі товари
-        const related = allProducts
+        const allItems =
+          foundProduct.category === "books" ? apiBooks : products;
+        const related = allItems
           .filter(
             (p) =>
               p.category === foundProduct.category && p.id !== foundProduct.id,
@@ -39,9 +48,7 @@ function ProductDetail({ addToCart }) {
       }
     } catch (error) {
       console.error("Error loading product:", error);
-      // Fallback до локальних даних
-      const foundProduct = products.find((p) => p.id.toString() === id);
-      setProduct(foundProduct || null);
+      setProduct(null);
     } finally {
       setLoading(false);
     }

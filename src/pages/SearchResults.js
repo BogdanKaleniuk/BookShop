@@ -1,34 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { products, getAllProducts } from "../data/products";
+import { products } from "../data/products";
+import { useBooks } from "../context/BooksContext";
 import { useToast } from "../components/ToastContainer";
 import Rating from "../components/Rating";
-import ProductSkeleton from "../components/ProductSkeleton";
 import "./SearchResults.css";
 
 function SearchResults({ addToCart }) {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const { addToast } = useToast();
-  const [allProducts, setAllProducts] = useState(products);
-  const [loading, setLoading] = useState(true);
+  const { apiBooks } = useBooks();
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
-
-  const loadProducts = async () => {
-    setLoading(true);
-    try {
-      const productsData = await getAllProducts();
-      setAllProducts(productsData);
-    } catch (error) {
-      console.error("Error loading products:", error);
-      setAllProducts(products);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Шукаємо і в книгах з API, і в локальних іграх
+  const allProducts = [...apiBooks, ...products];
 
   const searchResults = allProducts.filter((product) => {
     const searchLower = query.toLowerCase();
@@ -50,17 +35,12 @@ function SearchResults({ addToCart }) {
       <div className="search-header">
         <h1>Результати пошуку: "{query}"</h1>
         <p className="results-count">
-          {loading
-            ? "Завантаження..."
-            : `Знайдено ${searchResults.length} ${searchResults.length === 1 ? "товар" : "товарів"}`}
+          Знайдено {searchResults.length}{" "}
+          {searchResults.length === 1 ? "товар" : "товарів"}
         </p>
       </div>
 
-      {loading ? (
-        <div className="products-grid">
-          <ProductSkeleton count={6} />
-        </div>
-      ) : searchResults.length === 0 ? (
+      {searchResults.length === 0 ? (
         <div className="no-results">
           <h2>😔 Нічого не знайдено</h2>
           <p>Спробуйте змінити пошуковий запит</p>

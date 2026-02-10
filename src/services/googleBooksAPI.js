@@ -13,11 +13,15 @@ export const BOOK_CATEGORIES = {
 };
 
 // Функція для отримання книг за категорією
-export async function fetchBooksByCategory(category, maxResults = 20) {
+export async function fetchBooksByCategory(
+  category,
+  maxResults = 20,
+  startIndex = 0,
+) {
   try {
     const query = BOOK_CATEGORIES[category] || "subject:fiction";
     const response = await fetch(
-      `${GOOGLE_BOOKS_API}?q=${query}&maxResults=${maxResults}&langRestrict=en&orderBy=relevance`,
+      `${GOOGLE_BOOKS_API}?q=${query}&maxResults=${maxResults}&startIndex=${startIndex}&langRestrict=en&orderBy=relevance`,
     );
 
     if (!response.ok) {
@@ -33,10 +37,10 @@ export async function fetchBooksByCategory(category, maxResults = 20) {
 }
 
 // Функція для пошуку книг
-export async function searchBooks(query, maxResults = 20) {
+export async function searchBooks(query, maxResults = 20, startIndex = 0) {
   try {
     const response = await fetch(
-      `${GOOGLE_BOOKS_API}?q=${encodeURIComponent(query)}&maxResults=${maxResults}&langRestrict=en`,
+      `${GOOGLE_BOOKS_API}?q=${encodeURIComponent(query)}&maxResults=${maxResults}&startIndex=${startIndex}&langRestrict=en`,
     );
 
     if (!response.ok) {
@@ -51,21 +55,37 @@ export async function searchBooks(query, maxResults = 20) {
   }
 }
 
-// Функція для отримання популярних книг
-export async function fetchPopularBooks(maxResults = 20) {
+// Функція для отримання популярних книг з підтримкою пагінації
+export async function fetchPopularBooks(maxResults = 40, startIndex = 0) {
+  console.log(
+    "🔍 fetchPopularBooks викликано, maxResults:",
+    maxResults,
+    "startIndex:",
+    startIndex,
+  );
+
   try {
-    const response = await fetch(
-      `${GOOGLE_BOOKS_API}?q=bestseller&maxResults=${maxResults}&orderBy=relevance`,
-    );
+    // ← ЗМІНИ URL (додаємо printType і projection):
+    const url = `${GOOGLE_BOOKS_API}?q=bestseller&maxResults=${maxResults}&startIndex=${startIndex}&orderBy=relevance&printType=books&projection=full`;
+    console.log("📡 URL:", url);
+
+    const response = await fetch(url);
+    console.log("📥 Response status:", response.status);
 
     if (!response.ok) {
       throw new Error("Failed to fetch popular books");
     }
 
     const data = await response.json();
-    return transformBooksData(data.items || []);
+    console.log("📦 Raw data items:", data.items?.length || 0);
+    console.log("📊 Total items available:", data.totalItems);
+
+    const transformed = transformBooksData(data.items || []);
+    console.log("✨ Transformed books:", transformed.length);
+
+    return transformed;
   } catch (error) {
-    console.error("Error fetching popular books:", error);
+    console.error("❌ Error fetching popular books:", error);
     return [];
   }
 }
@@ -85,7 +105,7 @@ function transformBooksData(items) {
     const reviewCount = volumeInfo.ratingsCount || generateRandomReviewCount();
 
     return {
-      id: `google-${item.id}-${index}`, // Унікальний ID
+      id: `google-${item.id}`, // Унікальний ID без index (щоб не дублювались)
       name: volumeInfo.title || "Без назви",
       category: "books",
       price: Math.round(price),
@@ -100,7 +120,7 @@ function transformBooksData(items) {
         ? volumeInfo.description.substring(0, 200) + "..."
         : "Опис недоступний",
       inStock: Math.random() > 0.2, // 80% книг в наявності
-      rating: rating, // Тепер гарантовано число
+      rating: rating,
       reviewCount: reviewCount,
       language: volumeInfo.language || "en",
       publishedDate: volumeInfo.publishedDate || "Невідомо",

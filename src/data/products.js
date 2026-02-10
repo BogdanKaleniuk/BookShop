@@ -1,246 +1,7 @@
-import {
-  fetchBooksByCategory,
-  fetchPopularBooks,
-} from "../services/googleBooksAPI";
-// Кеш для API даних
-let cachedApiBooks = null;
-let cacheTimestamp = null;
-const CACHE_DURATION = 30 * 60 * 1000; // 30 хвилин
+import { fetchPopularBooks } from "../services/googleBooksAPI";
 
-// Функція для отримання всіх товарів (локальні + API)
-export async function getAllProducts(forceRefresh = false) {
-  console.log("🔵 getAllProducts викликано"); // ← ДОДАЙ
-
-  const now = Date.now();
-
-  // Перевіряємо кеш
-  if (
-    !forceRefresh &&
-    cachedApiBooks &&
-    cacheTimestamp &&
-    now - cacheTimestamp < CACHE_DURATION
-  ) {
-    return [...localProducts, ...cachedApiBooks];
-  }
-
-  try {
-    // Завантажуємо книги з API
-    const apiBooks = await fetchPopularBooks(40);
-    console.log("📚 Перші 3 книги:", apiBooks.slice(0, 3)); // ← ДОДАЙ
-
-    // Зберігаємо в кеш
-    cachedApiBooks = apiBooks;
-    cacheTimestamp = now;
-
-    // Повертаємо комбіновані дані
-    return [...localProducts, ...apiBooks];
-  } catch (error) {
-    console.error("Error loading API books:", error);
-    // Якщо помилка - повертаємо тільки локальні
-    return localProducts;
-  }
-}
-
-// Локальні товари (наші 35 товарів залишаються як fallback)
+// Локальні товари - ТІЛЬКИ НАСТІЛЬНІ ІГРИ
 const localProducts = [
-  // ============ КНИГИ ============
-  {
-    id: 1,
-    name: "Гаррі Поттер і Філософський Камінь",
-    category: "books",
-    price: 350,
-    author: "Дж. К. Роулінг",
-    image:
-      "https://images.unsplash.com/photo-1621351183012-e2f9972dd9bf?w=400&h=600&fit=crop",
-    description:
-      "Перша книга культової серії про юного чарівника, який дізнається про свої магічні здібності",
-    inStock: true,
-    rating: 4.9,
-    reviewCount: 1250,
-  },
-  {
-    id: 2,
-    name: "Кобзар",
-    category: "books",
-    price: 250,
-    author: "Тарас Шевченко",
-    image:
-      "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=600&fit=crop",
-    description: "Збірка поезій класика української літератури",
-    inStock: true,
-    rating: 4.8,
-    reviewCount: 890,
-  },
-  {
-    id: 3,
-    name: "1984",
-    category: "books",
-    price: 300,
-    author: "Джордж Орвелл",
-    image:
-      "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop",
-    description: "Антиутопія про тоталітарне суспільство майбутнього",
-    inStock: true,
-    rating: 4.7,
-    reviewCount: 2100,
-  },
-  {
-    id: 4,
-    name: "Майстер і Маргарита",
-    category: "books",
-    price: 320,
-    author: "Михайло Булгаков",
-    image:
-      "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop",
-    description: "Містичний роман про любов і боротьбу добра зі злом",
-    inStock: true,
-    rating: 4.9,
-    reviewCount: 1680,
-  },
-  {
-    id: 5,
-    name: "Тіні забутих предків",
-    category: "books",
-    price: 280,
-    author: "Михайло Коцюбинський",
-    image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop",
-    description: "Класика української прози про кохання в Карпатах",
-    inStock: false,
-    rating: 4.6,
-    reviewCount: 450,
-  },
-  {
-    id: 11,
-    name: "Маленький принц",
-    category: "books",
-    price: 220,
-    author: "Антуан де Сент-Екзюпері",
-    image:
-      "https://images.unsplash.com/photo-1513001900722-370f803f498d?w=400&h=600&fit=crop",
-    description: "Філософська казка про дружбу, любов і сенс життя",
-    inStock: true,
-    rating: 4.9,
-    reviewCount: 3400,
-  },
-  {
-    id: 12,
-    name: "Володар перснів",
-    category: "books",
-    price: 450,
-    author: "Дж. Р. Р. Толкін",
-    image:
-      "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&h=600&fit=crop",
-    description: "Епічна фентезі-сага про боротьбу добра зі злом",
-    inStock: true,
-    rating: 4.9,
-    reviewCount: 5200,
-  },
-  {
-    id: 13,
-    name: "Злочин і кара",
-    category: "books",
-    price: 310,
-    author: "Федір Достоєвський",
-    image:
-      "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=600&fit=crop",
-    description: "Психологічний роман про моральний вибір",
-    inStock: true,
-    rating: 4.7,
-    reviewCount: 1890,
-  },
-  {
-    id: 14,
-    name: "Над прірвою в житі",
-    category: "books",
-    price: 270,
-    author: "Джером Селінджер",
-    image:
-      "https://images.unsplash.com/photo-1524578271613-d550eacf6090?w=400&h=600&fit=crop",
-    description: "Культовий роман про підліткові проблеми",
-    inStock: true,
-    rating: 4.5,
-    reviewCount: 2300,
-  },
-  {
-    id: 15,
-    name: "Сто років самотності",
-    category: "books",
-    price: 340,
-    author: "Габріель Гарсія Маркес",
-    image:
-      "https://images.unsplash.com/photo-1519682577862-22b62b24e493?w=400&h=600&fit=crop",
-    description: "Магічний реалізм про історію сім'ї Буендіа",
-    inStock: true,
-    rating: 4.8,
-    reviewCount: 1560,
-  },
-  {
-    id: 16,
-    name: "Великий Гетсбі",
-    category: "books",
-    price: 260,
-    author: "Френсіс Скотт Фіцджеральд",
-    image:
-      "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&h=600&fit=crop",
-    description: "Класика американської літератури про американську мрію",
-    inStock: true,
-    rating: 4.6,
-    reviewCount: 2780,
-  },
-  {
-    id: 17,
-    name: "Убити пересмішника",
-    category: "books",
-    price: 290,
-    author: "Харпер Лі",
-    image:
-      "https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=400&h=600&fit=crop",
-    description: "Роман про расову нерівність у Америці 1930-х",
-    inStock: false,
-    rating: 4.8,
-    reviewCount: 3100,
-  },
-  {
-    id: 18,
-    name: "Атлант розправив плечі",
-    category: "books",
-    price: 480,
-    author: "Айн Ренд",
-    image:
-      "https://images.unsplash.com/photo-1589998059171-988d887df646?w=400&h=600&fit=crop",
-    description: "Філософський роман про індивідуалізм і капіталізм",
-    inStock: true,
-    rating: 4.4,
-    reviewCount: 1200,
-  },
-  {
-    id: 19,
-    name: "Гордість і упередження",
-    category: "books",
-    price: 275,
-    author: "Джейн Остін",
-    image:
-      "https://images.unsplash.com/photo-1509021436665-8f07dbf5bf1d?w=400&h=600&fit=crop",
-    description: "Романтична історія про класові різниці в Англії",
-    inStock: true,
-    rating: 4.7,
-    reviewCount: 2900,
-  },
-  {
-    id: 20,
-    name: "Данте Аліг'єрі: Божественна комедія",
-    category: "books",
-    price: 380,
-    author: "Данте Аліг'єрі",
-    image:
-      "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=600&fit=crop",
-    description: "Епічна поема про подорож через пекло, чистилище та рай",
-    inStock: true,
-    rating: 4.6,
-    reviewCount: 890,
-  },
-
   // ============ НАСТІЛЬНІ ІГРИ ============
   {
     id: 6,
@@ -440,5 +201,20 @@ const localProducts = [
   },
 ];
 
-// Синхронний експорт локальних товарів (для сумісності)
+// Функція для завантаження книг з API (з пагінацією)
+export async function fetchBooksFromAPI(limit = 40, startIndex = 0) {
+  try {
+    console.log(
+      `🌐 Завантаження книг: limit=${limit}, startIndex=${startIndex}`,
+    );
+    const apiBooks = await fetchPopularBooks(limit, startIndex);
+    console.log(`✅ Завантажено ${apiBooks.length} книг з API`);
+    return apiBooks;
+  } catch (error) {
+    console.error("❌ Помилка завантаження книг з API:", error);
+    return [];
+  }
+}
+
+// Експорт тільки ігор (книг немає!)
 export const products = localProducts;
