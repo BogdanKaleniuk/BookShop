@@ -15,11 +15,6 @@ function ProductDetail({ addToCart }) {
   const [loading, setLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState([]);
 
-  useEffect(() => {
-    loadProduct();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, apiBooks]);
-
   const loadProduct = () => {
     setLoading(true);
     try {
@@ -54,6 +49,11 @@ function ProductDetail({ addToCart }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadProduct();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, apiBooks]);
 
   if (loading) {
     return (
