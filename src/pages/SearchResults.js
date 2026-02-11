@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { products } from "../data/products";
 import { useBooks } from "../context/BooksContext";
+import { useGames } from "../context/GamesContext";
 import { useToast } from "../components/ToastContainer";
 import Rating from "../components/Rating";
 import "./SearchResults.css";
@@ -10,10 +10,12 @@ function SearchResults({ addToCart }) {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const { addToast } = useToast();
-  const { apiBooks } = useBooks();
 
-  // Шукаємо і в книгах з API, і в локальних іграх
-  const allProducts = [...apiBooks, ...products];
+  const { apiBooks } = useBooks();
+  const { apiGames } = useGames();
+
+  // Шукаємо і в книгах, і в іграх
+  const allProducts = [...apiBooks, ...apiGames];
 
   const searchResults = allProducts.filter((product) => {
     const searchLower = query.toLowerCase();
@@ -80,7 +82,7 @@ function SearchResults({ addToCart }) {
                 <p className="product-category">
                   {product.category === "books"
                     ? "📚 Книга"
-                    : "🎲 Настільна гра"}
+                    : "🎮 Настільна гра"}
                 </p>
 
                 <div className="product-footer">

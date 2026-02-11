@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { products } from "../data/products";
 import { useBooks } from "../context/BooksContext";
+import { useGames } from "../context/GamesContext";
 import { useToast } from "../components/ToastContainer";
 import Rating from "../components/Rating";
 import "./ProductDetail.css";
@@ -10,7 +10,10 @@ function ProductDetail({ addToCart }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToast } = useToast();
+
   const { getBookById, apiBooks } = useBooks();
+  const { getGameById, apiGames } = useGames();
+
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState([]);
@@ -18,25 +21,22 @@ function ProductDetail({ addToCart }) {
   const loadProduct = () => {
     setLoading(true);
     try {
-      // Шукаємо спочатку серед книг з API
+      // Шукаємо спочатку серед книг
       let foundProduct = getBookById(id);
+      let allItems = apiBooks;
 
-      // Якщо не знайдено - шукаємо в іграх (локальні)
+      // Якщо не знайдено - шукаємо в іграх
       if (!foundProduct) {
-        foundProduct = products.find((p) => p.id.toString() === id);
+        foundProduct = getGameById(id);
+        allItems = apiGames;
       }
 
       if (foundProduct) {
         setProduct(foundProduct);
 
-        // Знаходимо схожі товари
-        const allItems =
-          foundProduct.category === "books" ? apiBooks : products;
+        // Знаходимо схожі товари з тієї ж категорії
         const related = allItems
-          .filter(
-            (p) =>
-              p.category === foundProduct.category && p.id !== foundProduct.id,
-          )
+          .filter((p) => p.id !== foundProduct.id)
           .slice(0, 3);
         setRelatedProducts(related);
       } else {
@@ -52,8 +52,7 @@ function ProductDetail({ addToCart }) {
 
   useEffect(() => {
     loadProduct();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, apiBooks]);
+  }, [id, apiBooks, apiGames]);
 
   if (loading) {
     return (
@@ -112,14 +111,42 @@ function ProductDetail({ addToCart }) {
 
           <p className="detail-description">{product.description}</p>
 
-          {product.publishedDate && (
-            <p className="detail-extra">
-              Дата публікації: {product.publishedDate}
-            </p>
+          {/* Додаткова інформація для книг */}
+          {product.category === "books" && (
+            <>
+              {product.publishedDate && (
+                <p className="detail-extra">
+                  📅 Дата публікації: {product.publishedDate}
+                </p>
+              )}
+              {product.pageCount && product.pageCount > 0 && (
+                <p className="detail-extra">📖 Сторінок: {product.pageCount}</p>
+              )}
+            </>
           )}
 
-          {product.pageCount && product.pageCount > 0 && (
-            <p className="detail-extra">Сторінок: {product.pageCount}</p>
+          {/* Додаткова інформація для ігор */}
+          {product.category === "games" && (
+            <>
+              {product.yearPublished && (
+                <p className="detail-extra">
+                  📅 Рік випуску: {product.yearPublished}
+                </p>
+              )}
+              {product.playtime && (
+                <p className="detail-extra">⏱️ Час гри: {product.playtime}</p>
+              )}
+              {product.minAge && (
+                <p className="detail-extra">
+                  👶 Мінімальний вік: {product.minAge}+
+                </p>
+              )}
+              {product.difficulty && (
+                <p className="detail-extra">
+                  🎓 Складність: {product.difficulty.toFixed(1)}/5
+                </p>
+              )}
+            </>
           )}
 
           <div className="detail-price">

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { products } from "../data/products";
 import { useBooks } from "../context/BooksContext";
+import { useGames } from "../context/GamesContext";
 import { useToast } from "../components/ToastContainer";
 import Rating from "../components/Rating";
 import ProductSkeleton from "../components/ProductSkeleton";
@@ -13,25 +13,30 @@ function ProductList({ category, addToCart }) {
   const [loadingMore, setLoadingMore] = useState(false);
   const { addToast } = useToast();
 
-  // Отримуємо книги з Context (тільки для категорії books)
-  const { apiBooks, loading, hasMore, loadMoreBooks } = useBooks();
+  // Отримуємо дані з відповідного Context
+  const booksContext = useBooks();
+  const gamesContext = useGames();
 
-  // DEBUG: Логуємо стан
-  console.log("📊 ProductList DEBUG:", {
-    category,
-    loading,
-    hasMore,
-    apiBooksLength: apiBooks.length,
-    productsLength: products.length,
-  });
+  // Визначаємо який контекст використовувати
+  const {
+    apiBooks,
+    loading: booksLoading,
+    hasMore: booksHasMore,
+    loadMoreBooks,
+  } = booksContext;
 
-  // Визначаємо які товари показувати
-  const allProducts =
-    category === "books"
-      ? apiBooks // Для книг - тільки з API
-      : products.filter((p) => p.category === category); // Для ігор - локальні
+  const {
+    apiGames,
+    loading: gamesLoading,
+    hasMore: gamesHasMore,
+    loadMoreGames,
+  } = gamesContext;
 
-  console.log("📚 allProducts length:", allProducts.length);
+  // Вибираємо дані залежно від категорії
+  const allProducts = category === "books" ? apiBooks : apiGames;
+  const loading = category === "books" ? booksLoading : gamesLoading;
+  const hasMore = category === "books" ? booksHasMore : gamesHasMore;
+  const loadMore = category === "books" ? loadMoreBooks : loadMoreGames;
 
   const filteredProducts = allProducts
     .filter((product) => {
@@ -48,6 +53,7 @@ function ProductList({ category, addToCart }) {
     });
 
   const categoryTitle = category === "books" ? "Книги" : "Настільні ігри";
+  const categoryEmoji = category === "books" ? "📚" : "🎮";
 
   const handleAddToCart = (product) => {
     addToCart(product);
@@ -55,14 +61,13 @@ function ProductList({ category, addToCart }) {
   };
 
   const handleLoadMore = async () => {
-    console.log("🔄 handleLoadMore викликано");
     setLoadingMore(true);
-    const count = await loadMoreBooks();
-    console.log("✅ Завантажено книг:", count);
+    const count = await loadMore();
     if (count > 0) {
-      addToast(`Завантажено ще ${count} книг`, "success");
+      const itemType = category === "books" ? "книг" : "ігор";
+      addToast(`Завантажено ще ${count} ${itemType}`, "success");
     } else {
-      addToast("Більше книг немає", "info");
+      addToast("Більше товарів немає", "info");
     }
     setLoadingMore(false);
   };
@@ -94,7 +99,7 @@ function ProductList({ category, addToCart }) {
       </div>
 
       <div className="products-grid">
-        {loading && category === "books" ? (
+        {loading ? (
           <ProductSkeleton count={8} />
         ) : filteredProducts.length === 0 ? (
           <div className="no-products">
@@ -143,10 +148,8 @@ function ProductList({ category, addToCart }) {
         )}
       </div>
 
-      {/* DEBUG БЛОК */}
-
-      {/* Кнопка "Завантажити ще" - тільки для книг */}
-      {!loading && hasMore && category === "books" && (
+      {/* Кнопка "Завантажити ще" */}
+      {!loading && hasMore && (
         <div className="load-more-container">
           <button
             className="load-more-btn"
@@ -159,23 +162,28 @@ function ProductList({ category, addToCart }) {
                 Завантаження...
               </>
             ) : (
-              <>📚 Завантажити ще книги</>
+              <>
+                {categoryEmoji} Завантажити ще{" "}
+                {category === "books" ? "книги" : "ігри"}
+              </>
             )}
           </button>
           <p className="load-more-hint">
-            Завантажено: {allProducts.length} книг
+            Завантажено: {allProducts.length}{" "}
+            {category === "books" ? "книг" : "ігор"}
           </p>
         </div>
       )}
 
-      {!loading &&
-        !hasMore &&
-        category === "books" &&
-        allProducts.length > 0 && (
-          <div className="no-more-items">
-            <p>🎉 Ви переглянули всі доступні книги!</p>
-          </div>
-        )}
+      {/* Повідомлення коли товари закінчились */}
+      {!loading && !hasMore && allProducts.length > 0 && (
+        <div className="no-more-items">
+          <p>
+            🎉 Ви переглянули всі доступні{" "}
+            {category === "books" ? "книги" : "ігри"}!
+          </p>
+        </div>
+      )}
     </div>
   );
 }
