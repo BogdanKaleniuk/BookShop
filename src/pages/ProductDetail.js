@@ -18,39 +18,38 @@ function ProductDetail({ addToCart }) {
   const [loading, setLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState([]);
 
-  const loadProduct = () => {
-    setLoading(true);
-    try {
-      // Шукаємо спочатку серед книг
-      let foundProduct = getBookById(id);
-      let allItems = apiBooks;
-
-      // Якщо не знайдено - шукаємо в іграх
-      if (!foundProduct) {
-        foundProduct = getGameById(id);
-        allItems = apiGames;
-      }
-
-      if (foundProduct) {
-        setProduct(foundProduct);
-
-        // Знаходимо схожі товари з тієї ж категорії
-        const related = allItems
-          .filter((p) => p.id !== foundProduct.id)
-          .slice(0, 3);
-        setRelatedProducts(related);
-      } else {
-        setProduct(null);
-      }
-    } catch (error) {
-      console.error("Error loading product:", error);
-      setProduct(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const loadProduct = () => {
+      setLoading(true);
+      try {
+        // Шукаємо спочатку серед книг
+        let foundProduct = getBookById(id);
+        let allItems = apiBooks;
+
+        // Якщо не знайдено - шукаємо в іграх
+        if (!foundProduct) {
+          foundProduct = getGameById(id);
+          allItems = apiGames;
+        }
+
+        if (foundProduct) {
+          setProduct(foundProduct);
+
+          // Знаходимо схожі товари з тієї ж категорії
+          const related = allItems
+            .filter((p) => p.id !== foundProduct.id)
+            .slice(0, 3);
+          setRelatedProducts(related);
+        } else {
+          setProduct(null);
+        }
+      } catch (error) {
+        console.error("Error loading product:", error);
+        setProduct(null);
+      } finally {
+        setLoading(false);
+      }
+    };
     loadProduct();
   }, [id, apiBooks, apiGames]);
 
