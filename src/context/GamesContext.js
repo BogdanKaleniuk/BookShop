@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { fetchPopularGames } from "../services/boardGameAPI";
+import { allGames } from "../data/gamesData";
 
 const GamesContext = createContext();
 
@@ -16,18 +16,21 @@ export function GamesProvider({ children }) {
     loadInitialGames();
   }, []);
 
-  const loadInitialGames = async () => {
+  const loadInitialGames = () => {
     console.log("🚀 loadInitialGames - ПОЧАТОК");
     setLoading(true);
-    try {
-      const games = await fetchPopularGames(ITEMS_PER_PAGE, 0);
-      console.log("🎮 Отримано ігор:", games.length);
-      console.log("🎲 Перша гра:", games[0]?.name);
 
-      setApiGames(games);
+    try {
+      // Беремо перші 20 ігор з локального масиву
+      const initialGames = allGames.slice(0, ITEMS_PER_PAGE);
+      console.log("🎮 Завантажено початкових ігор:", initialGames.length);
+      console.log("🎲 Перша гра:", initialGames[0]?.name);
+
+      setApiGames(initialGames);
       setPage(1);
 
-      const shouldHaveMore = games.length >= 10;
+      // Якщо є ще ігри - можна завантажувати
+      const shouldHaveMore = allGames.length > ITEMS_PER_PAGE;
       console.log("✅ Встановлюємо hasMore =", shouldHaveMore);
       setHasMore(shouldHaveMore);
     } catch (error) {
@@ -39,18 +42,22 @@ export function GamesProvider({ children }) {
     }
   };
 
-  const loadMoreGames = async () => {
+  const loadMoreGames = () => {
     console.log("🔄 loadMoreGames викликано");
+
     if (!hasMore) {
       console.log("⚠️ hasMore = false, виходимо");
       return 0;
     }
 
     try {
-      const skip = page * ITEMS_PER_PAGE;
-      console.log(`📡 Завантажуємо з skip=${skip}`);
+      const startIndex = page * ITEMS_PER_PAGE;
+      const endIndex = startIndex + ITEMS_PER_PAGE;
 
-      const moreGames = await fetchPopularGames(ITEMS_PER_PAGE, skip);
+      console.log(`📡 Завантажуємо з індексу ${startIndex} до ${endIndex}`);
+
+      // Беремо наступну порцію ігор
+      const moreGames = allGames.slice(startIndex, endIndex);
       console.log(`🎮 Отримано ще ${moreGames.length} ігор`);
 
       if (moreGames.length > 0) {
@@ -61,7 +68,8 @@ export function GamesProvider({ children }) {
         });
         setPage((prev) => prev + 1);
 
-        const shouldHaveMore = moreGames.length >= 10;
+        // Перевіряємо чи є ще ігри
+        const shouldHaveMore = endIndex < allGames.length;
         console.log("✅ Оновлюємо hasMore =", shouldHaveMore);
         setHasMore(shouldHaveMore);
 
@@ -96,6 +104,7 @@ export function GamesProvider({ children }) {
       hasMore,
       apiGamesLength: apiGames.length,
       page,
+      totalGamesAvailable: allGames.length,
     });
   }, [loading, hasMore, apiGames.length, page]);
 
