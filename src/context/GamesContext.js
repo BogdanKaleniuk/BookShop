@@ -17,7 +17,7 @@ export function GamesProvider({ children }) {
   }, []);
 
   const loadInitialGames = () => {
-    console.log("🚀 loadInitialGames - ПОЧАТОК");
+    console.log("🚀 loadInitialGames-ПОЧАТОК");
     setLoading(true);
 
     try {
