@@ -23,7 +23,7 @@ export function GamesProvider({ children }) {
     try {
       // Беремо перші 20 ігор з локального масиву
       const initialGames = allGames.slice(0, ITEMS_PER_PAGE);
-      console.log("🎮 Завантажено початкових ігор:", initialGames.length);
+      console.log("🎮 Завантажено  ігор:", initialGames.length);
       console.log("🎲 Перша гра:", initialGames[0]?.name);
 
       setApiGames(initialGames);
