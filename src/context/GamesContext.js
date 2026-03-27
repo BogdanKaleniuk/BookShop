@@ -99,7 +99,7 @@ export function GamesProvider({ children }) {
   };
 
   useEffect(() => {
-    console.log("🔵Games Context STATE UPDATE:", {
+    console.log("🔵Games Context  STATE UPDATE:", {
       loading,
       hasMore,
       apiGamesLength: apiGames.length,
